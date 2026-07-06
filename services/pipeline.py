@@ -112,7 +112,7 @@ class ParsePipeline:
 
     def finish(self) -> None:
         """首个调用方完成上传+缓存后调用，释放所有等待者"""
-        event = _inflight.pop(self._url, None)
+        event = _inflight.pop(self._raw_url, None)
         if event is not None:
             event.set()
 

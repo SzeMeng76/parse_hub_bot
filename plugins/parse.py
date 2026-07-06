@@ -77,7 +77,7 @@ async def _send_with_rate_limit[T](
                 logger.warning(f"{e.ID} 重试 ({attempt + 1}/{MAX_RETRIES})，等待 {e.value}s")
                 await asyncio.sleep(e.value)
             else:
-                raise e from e
+                raise
     raise RuntimeError("发送重试失败")
 
 
