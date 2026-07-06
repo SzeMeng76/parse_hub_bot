@@ -368,7 +368,7 @@ async def handle_parse(
 
     caption = build_caption(parse_result, hide_source=user_config.hide_source)
     gif_only = all(isinstance(i, AniRef) for i in to_list(parse_result.media))
-    if mode == "preview" and gif_only:
+    if mode == "preview" and gif_only and len(to_list(parse_result.media)) > GIF_ONLY_SKIP_DOWNLOAD_COUNT_THRESHOLD:
         await _send_with_rate_limit(
             lambda: msg.reply_text(
                 caption,
