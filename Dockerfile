@@ -24,6 +24,7 @@ FROM python:3.12-slim AS runtime
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libglib2.0-0 \
+        libjemalloc2 \
         ffmpeg \
         media-types \
         curl unzip ca-certificates \
@@ -32,11 +33,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV DENO_INSTALL="/root/.deno"
 ENV PATH="/app/.venv/bin:$DENO_INSTALL/bin:$PATH"
+ENV LD_PRELOAD=libjemalloc.so.2
 
 WORKDIR /app
 COPY --from=build /app /app
-
-ENV PATH="/app/.venv/bin:$PATH"
 
 
 CMD ["python", "bot.py"]
