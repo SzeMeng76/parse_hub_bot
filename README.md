@@ -260,20 +260,28 @@ platforms:
 
 ## 🤝 参与贡献
 
-欢迎提交 Pull Request 或 Issue！
+欢迎提交 Pull Request 或 Issue!
 
-- 核心解析相关请前往 [ParseHub](https://github.com/z-mio/ParseHub)。
-- Bug 反馈请附上相关 URL 和日志信息。
+- 核心解析相关请前往 [ParseHub](https://github.com/z-mio/ParseHub)
+- Bug 反馈请附上相关 URL 和日志信息
+
+### 开发规范
+
+提交代码前请至少执行:
+
+```bash
+ruff format && ruff check --fix && uv run mypy
+```
 
 ## 📄 开源协议
 
-本项目基于 [MIT License](LICENSE) 协议开源。
+本项目基于 [MIT License](LICENSE) 协议开源
 
 ---
 
 <div align="center">
 
-**如果这个项目对你有帮助，欢迎点个 ⭐ Star！**
+**如果这个项目对你有帮助，欢迎点个 ⭐ Star!**
 
 </div>
 
