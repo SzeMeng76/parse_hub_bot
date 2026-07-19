@@ -9,10 +9,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.base import Base
 
 if TYPE_CHECKING:
-    from db.models.user_settings import UserSettings
+    from db.models.settings import Settings
 
 
-class Users(Base):
+class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(
@@ -32,10 +32,8 @@ class Users(Base):
         onupdate=func.now(),
     )
 
-    settings: Mapped[UserSettings | None] = relationship(
-        "UserSettings",
+    settings: Mapped[list[Settings]] = relationship(
+        "Settings",
         back_populates="user",
-        cascade="all, delete-orphan",
-        single_parent=True,
-        uselist=False,
+        passive_deletes=True,
     )

@@ -47,8 +47,8 @@ from plugins.helpers import (
     create_richtext_telegraph,
     resolve_media_info,
 )
-from repo.user_settings import UserConfig
-from services import AccountContext, AccountService, ParseService
+from repo.settings import Config
+from services import ParseService, SettingsService, TelegramSettingsTarget, UserService
 from services.cache import CacheEntry, CacheMediaType, parse_cache, persistent_cache
 from services.pipeline import ParsePipeline, StatusReporter
 from utils.helpers import to_list, with_request_id
@@ -62,7 +62,7 @@ class InlineStatusReporter(StatusReporter):
     """基于 inline_message_id 的状态报告器"""
 
     def __init__(
-        self, cli: Client, inline_message_id: str, caption: str = "", *, _t: PreLocaleSelector, user_config: UserConfig
+        self, cli: Client, inline_message_id: str, caption: str = "", *, _t: PreLocaleSelector, user_config: Config
     ):
         self._cli = cli
         self._mid = inline_message_id
@@ -113,19 +113,19 @@ class InlineStatusReporter(StatusReporter):
         pass
 
 
-def build_cached_inline_results(entry: CacheEntry, raw_url: str, current: AccountContext) -> list[InlineQueryResult]:
+def build_cached_inline_results(entry: CacheEntry, raw_url: str, lang: str, config: Config) -> list[InlineQueryResult]:
     """有 file_id 缓存时，构建 cached 类型的 inline 结果（Telegram 服务端直发）"""
-    _t = t_[current.user.language_code]
+    _t = t_[lang]
 
     content = entry.parse_result.content
     caption = build_caption_by_str(
-        entry.parse_result.title, content, raw_url, entry.telegraph_url, hide_source=current.config.hide_source
+        entry.parse_result.title, content, raw_url, entry.telegraph_url, hide_source=config.hide_source
     )
     title = entry.parse_result.title or _t("无标题")
 
     results: list[InlineQueryResult] = []
 
-    if current.config.enable_inline_raw_url:
+    if config.enable_inline_raw_url:
         results.append(
             InlineQueryResultArticle(
                 title=_t("原始链接"),
@@ -207,18 +207,18 @@ def build_cached_inline_results(entry: CacheEntry, raw_url: str, current: Accoun
 
 
 async def build_inline_results(
-    parse_result: AnyParseResult, cli: Client, current: AccountContext
+    parse_result: AnyParseResult, cli: Client, lang: str, config: Config
 ) -> list[InlineQueryResult]:
     """根据解析结果构建内联查询结果列表"""
     logger.debug(f"构建 inline 结果: type={parse_result.type}, title={parse_result.title}")
-    _t = t_[current.user.language_code]
+    _t = t_[lang]
 
     title = parse_result.title or _t("无标题")
     media_list = to_list(parse_result.media)
     reply_markup = Ikm([[Ikb(_t("原链接"), url=parse_result.raw_url)]])
 
     results: list[InlineQueryResult] = []
-    if current.config.enable_inline_raw_url:
+    if config.enable_inline_raw_url:
         results.append(
             InlineQueryResultArticle(
                 title=_t("原始链接"),
@@ -235,7 +235,7 @@ async def build_inline_results(
     # ── 富文本直接 telegraph 发送 ──
     if parse_result.type == PostType.RICHTEXT:
         url = await create_richtext_telegraph(cli, parse_result)
-        caption = build_caption(parse_result, url, hide_source=current.config.hide_source)
+        caption = build_caption(parse_result, url, hide_source=config.hide_source)
         results.append(
             InlineQueryResultArticle(
                 title=title,
@@ -248,7 +248,7 @@ async def build_inline_results(
         )
         return results
 
-    caption = build_caption(parse_result, hide_source=current.config.hide_source)
+    caption = build_caption(parse_result, hide_source=config.hide_source)
 
     if not media_list:
         results.append(
@@ -317,7 +317,7 @@ async def build_inline_results(
 @Client.on_inline_query(~platform_filter(False))
 async def inline_parse_tip(_: Client, inline_query: InlineQuery) -> None:
     async with get_session() as session:
-        lang = await AccountService(session, inline_query.from_user.id).get_lang()
+        lang = await UserService(session, inline_query.from_user.id).get_lang()
         _t = t_[lang]
     results: list[InlineQueryResult] = [
         InlineQueryResultArticle(
@@ -338,10 +338,11 @@ async def call_inline_parse(cli: Client, inline_query: InlineQuery) -> None:
     logger.info(f"收到内联解析请求: query={inline_query.query}, from_user={inline_query.from_user.id}")
     raw_url = await ParseService().get_raw_url(inline_query.query)
     async with get_session() as session:
-        current = await AccountService(session, inline_query.from_user.id).ensure_account()
+        lang = await UserService(session, inline_query.from_user.id).get_lang()
+        config = await SettingsService(session).get_config(TelegramSettingsTarget.user(inline_query.from_user.id))
     if cached := await persistent_cache.get(raw_url):
         logger.debug("inline: 缓存命中, 构建 cached 结果")
-        results = build_cached_inline_results(cached, raw_url, current)
+        results = build_cached_inline_results(cached, raw_url, lang, config)
         await inline_query.answer(results[:50], cache_time=60)
         return
 
@@ -350,7 +351,7 @@ async def call_inline_parse(cli: Client, inline_query: InlineQuery) -> None:
         parse_result = await ParseService().parse(inline_query.query)
         await parse_cache.set(raw_url, parse_result)
 
-    results = await build_inline_results(parse_result, cli, current)
+    results = await build_inline_results(parse_result, cli, lang, config)
     logger.debug(f"inline 查询完成, 返回 {len(results)} 个结果")
     await inline_query.answer(results[:50], cache_time=0)
 
@@ -362,8 +363,9 @@ async def inline_result_download(cli: Client, chosen_result: ChosenInlineResult)
         return
 
     async with get_session() as session:
-        current = await AccountService(session, chosen_result.from_user.id).ensure_account()
-        _t = t_[current.lang]
+        lang = await UserService(session, chosen_result.from_user.id).get_lang()
+        config = await SettingsService(session).get_config(TelegramSettingsTarget.user(chosen_result.from_user.id))
+        _t = t_[lang]
     media_index = int(chosen_result.result_id.split("_")[1])
     inline_message_id = chosen_result.inline_message_id
     if inline_message_id is None:
@@ -375,14 +377,14 @@ async def inline_result_download(cli: Client, chosen_result: ChosenInlineResult)
     cached_result = await parse_cache.get(raw_url)
     logger.debug(f"缓存命中: {cached_result is not None}")
 
-    caption = build_caption(cached_result, hide_source=current.config.hide_source) if cached_result else ""
-    reporter = InlineStatusReporter(cli, inline_message_id, caption, _t=_t, user_config=current.config)
+    caption = build_caption(cached_result, hide_source=config.hide_source) if cached_result else ""
+    reporter = InlineStatusReporter(cli, inline_message_id, caption, _t=_t, user_config=config)
     with ParsePipeline(query, raw_url, reporter, parse_result=cached_result, singleflight=False, _t=_t) as pipeline:
         if (result := await pipeline.run()) is None:
             return
 
         parse_result = result.parse_result
-        caption = build_caption(parse_result, hide_source=current.config.hide_source)
+        caption = build_caption(parse_result, hide_source=config.hide_source)
 
         # ── 上传 ──
         await reporter.report(_t("上 传 中..."))

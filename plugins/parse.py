@@ -44,8 +44,8 @@ from plugins.helpers import (
     create_richtext_telegraph,
     resolve_media_info,
 )
-from repo.user_settings import UserConfig
-from services import AccountService, ParseService
+from repo.settings import Config
+from services import ParseService, SettingsService, TelegramSettingsTarget, UserService
 from services.cache import CacheEntry, CacheMedia, CacheMediaType, CacheParseResult, parse_cache, persistent_cache
 from services.pipeline import ParsePipeline, PipelineResult, StatusReporter
 from utils.helpers import pack_dir_to_tar_gz, to_list, with_request_id
@@ -86,7 +86,7 @@ async def _send_with_rate_limit[T](
 class MessageStatusReporter(StatusReporter):
     """基于 Telegram Message 的状态报告器"""
 
-    def __init__(self, user_msg: Message, *, _t: PreLocaleSelector, user_config: UserConfig):
+    def __init__(self, user_msg: Message, *, _t: PreLocaleSelector, user_config: Config):
         self._user_msg = user_msg
         self._msg: Message | None = None
         self._t = _t
@@ -144,13 +144,12 @@ async def jx(cli: Client, msg: Message) -> None:
     mode = "preview"
     bypass_cache = False
     lang = None
-    user_config = UserConfig()
+    user_config = Config()
 
     if msg.from_user:
         async with get_session() as session:
-            current = await AccountService(session, msg.from_user.id).ensure_account()
-            user_config = current.config
-            lang = current.lang
+            lang = await UserService(session, msg.from_user.id).get_lang()
+            user_config = await SettingsService(session).get_config(TelegramSettingsTarget.user(msg.from_user.id))
             mode = user_config.default_mode
 
     _t = t_[lang]
@@ -216,7 +215,7 @@ async def _handle_parse_request(
     delete_share_url_msg: bool = False,
     bypass_cache: bool = False,
     _t: PreLocaleSelector,
-    user_config: UserConfig,
+    user_config: Config,
 ) -> None:
     try:
         await handle_parse(
@@ -262,7 +261,7 @@ async def handle_parse(
     delete_share_url_msg: bool = False,
     bypass_cache: bool = False,
     _t: PreLocaleSelector,
-    user_config: UserConfig,
+    user_config: Config,
 ) -> None:
     chat_id = msg.chat.id if msg.chat else None
     logger.info(f"收到解析请求: url={url}, chat_id={chat_id}, msg_id={msg.id}, mode={mode}")
@@ -501,7 +500,7 @@ async def _send_raw(
     reporter: MessageStatusReporter,
     *,
     _t: PreLocaleSelector,
-    user_config: UserConfig,
+    user_config: Config,
 ) -> None:
     """Raw 模式：将文件以原始文档形式上传。"""
     logger.debug("Raw 模式, 直接上传文件")
@@ -579,7 +578,7 @@ async def _send_zip(
     reporter: MessageStatusReporter,
     *,
     _t: PreLocaleSelector,
-    user_config: UserConfig,
+    user_config: Config,
 ) -> None:
     logger.debug("Zip 模式, 开始打包")
     await reporter.report(_t("打 包 中..."))
@@ -796,7 +795,7 @@ async def _send_media(
 # ── 缓存发送 ─────────────────────────────────────────────────────────
 
 
-async def _send_cached(msg: Message, entry: CacheEntry, url: str, *, user_config: UserConfig) -> None:
+async def _send_cached(msg: Message, entry: CacheEntry, url: str, *, user_config: Config) -> None:
     """从 file_id 缓存直接发送，跳过解析/下载/转码"""
     logger.debug(f"缓存发送: media={entry.media}")
     caption = build_caption_by_str(

@@ -1,16 +1,17 @@
 from log import logger
-from repo.user_settings.migrations import REGISTRY
-from repo.user_settings.schema import CURRENT_SCHEMA_VERSION, DEFAULT_USER_CONFIG, UserConfig
+from repo.settings.migrations import REGISTRY
+from repo.settings.schema import CURRENT_SCHEMA_VERSION, DEFAULT_CONFIG, Config
 
 logger = logger.bind(name="UserConfigMigration")
 
 
-def migrate(config: UserConfig | None = None) -> UserConfig:
+def migrate(config: Config | None = None) -> Config:
     """
-    按注册表链条逐步升版本，并返回通过 Pydantic 校验后的 UserConfig。
+    按注册表链条逐步升版本，并返回通过 Pydantic 校验后的 Config。
     幂等：已是最新版本时只做模型校验，不修改入参。
     """
-    config = config or DEFAULT_USER_CONFIG.model_copy(deep=True)
+    if config is None:
+        config = DEFAULT_CONFIG.model_copy(deep=True)
     if config.schema_version == CURRENT_SCHEMA_VERSION:
         return config
 
@@ -33,6 +34,6 @@ def migrate(config: UserConfig | None = None) -> UserConfig:
             raise ValueError(f"迁移函数 v{source_version} 必须返回 schema_version={source_version + 1}。")
         logger.debug(f"用户配置迁移完成: v{source_version} -> v{config.schema_version}")
 
-    validated_config = UserConfig.model_validate(config.model_dump())
+    validated_config = Config.model_validate(config.model_dump())
     logger.debug(f"用户配置校验完成: schema_version={validated_config.schema_version}")
     return validated_config
