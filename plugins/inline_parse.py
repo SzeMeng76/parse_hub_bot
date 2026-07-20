@@ -45,7 +45,6 @@ from plugins.helpers import (
     build_caption_by_str,
     build_start_text,
     create_richtext_telegraph,
-    get_lang,
     resolve_media_info,
 )
 from repo.settings import Config
@@ -317,7 +316,8 @@ async def build_inline_results(
 
 @Client.on_inline_query(~platform_filter(False))
 async def inline_parse_tip(_: Client, inline_query: InlineQuery) -> None:
-    lang = await get_lang(inline_query.from_user.id)
+    async with get_session() as session:
+        lang = await UserService(session).get_lang(inline_query.from_user.id)
     _t = t_[lang]
     results: list[InlineQueryResult] = [
         InlineQueryResultArticle(

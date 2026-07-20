@@ -11,7 +11,6 @@ from pyrogram.types import InlineKeyboardMarkup as Ikm
 
 from db import get_session
 from i18n import LANG_MAP, t_
-from plugins.helpers import get_lang
 from repo.settings import Config, DefaultMode
 from services import SettingsService, TelegramSettingsTarget, UserService
 
@@ -45,7 +44,8 @@ async def select_lang(_: Client, msg: Message) -> None:
     if not msg.from_user:
         return
 
-    lang = await get_lang(msg.from_user.id)
+    async with get_session() as session:
+        lang = await UserService(session).get_lang(msg.from_user.id)
 
     ikbs = [
         Ikb(
@@ -273,7 +273,8 @@ async def ensure_callback_owner(
     owner_id: int,
 ) -> bool:
     if cq.from_user.id != owner_id:
-        lang = await get_lang(cq.from_user.id)
+        async with get_session() as session:
+            lang = await UserService(session).get_lang(cq.from_user.id)
         await cq.answer(t_[lang]("这不是你的操作"), show_alert=True)
         return False
     return True

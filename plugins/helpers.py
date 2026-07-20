@@ -11,10 +11,8 @@ from parsehub.types import AnyMediaFile, AnyParseResult, DownloadResult, RichTex
 from parsehub.utils.media_info import MediaInfoReader
 from pyrogram import Client
 
-from db import get_session
 from i18n import t_
 from log import logger
-from services import UserService
 from utils.converter import clean_article_html
 from utils.helpers import to_list
 from utils.media_processing_unit import MediaProcessingUnit
@@ -179,7 +177,3 @@ def get_supported_platforms() -> str:
     text.sort(reverse=True)
     return "\n".join(text)
 
-
-async def get_lang(telegram_user_id: int) -> str:
-    async with get_session() as session:
-        return await UserService(session).get_lang(telegram_user_id)
