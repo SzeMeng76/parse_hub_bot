@@ -38,7 +38,6 @@ async def jx(cli: Client, msg: Message) -> None:
     async with get_session() as session:
         if msg.from_user:
             lang = await UserService(session).get_lang(msg.from_user.id)
-        print(get_config_target(msg))
         config = await SettingsService(session).get_config(get_config_target(msg))
         mode = config.default_mode
 
