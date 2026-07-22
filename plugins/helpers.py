@@ -8,18 +8,9 @@ from markdown import markdown
 from parsehub import ParseHub, Platform
 from parsehub.types import AnyParseResult, RichTextParseResult
 from pyrogram import Client
-from pyrogram.enums import ChatType
-from pyrogram.types import InlineQuery, Message
 
 from i18n import t_
 from log import logger
-from services import (
-    AnySettingsTarget,
-    ChannelSettingsTarget,
-    ForumTopicMemberSettingsTarget,
-    GroupMemberSettingsTarget,
-    UserSettingsTarget,
-)
 from utils.converter import clean_article_html
 from utils.ph import Telegraph
 
@@ -31,7 +22,7 @@ COMMANDS = {
     "raw": t_("不处理媒体, 发送原始文件"),
     "zip": t_("不处理媒体, 保存解析结果, 发送压缩包"),
     "jxjx": t_("绕过缓存解析"),
-    "lang": t_("选择语言"),
+    "lang": t_("语言"),
     "cfg": t_("配置"),
 }
 
@@ -47,7 +38,7 @@ def build_start_text() -> LocaleContent:
         f"/raw <链接> - 不处理媒体, 发送原始文件\n"
         f"/zip <链接> - 不处理媒体, 保存解析结果, 发送压缩包\n"
         f"/jxjx <链接> - 绕过缓存解析并发送媒体\n"
-        f"/lang - 选择语言\n"
+        f"/lang - 语言\n"
         f"/cfg - 配置\n"
         f"/cfg <频道用户名/链接/id> - 频道配置\n"
         f"</blockquote>\n\n"
@@ -73,7 +64,7 @@ def build_caption_by_str(
     title, content = title or "", content or ""
 
     if telegraph_url:
-        label = (title or content[:15]).replace("\n", " ") or "无标题"
+        label = (title or content[:15]).replace("\n", " ") or "-"
         body = f"**[{label}]({telegraph_url})**"
     else:
         parts = []
@@ -81,7 +72,7 @@ def build_caption_by_str(
             parts.append(f"**{title}**")
         if content:
             parts.append(content)
-        body = format_text("\n\n".join(parts) or "**无标题**")
+        body = format_text("\n\n".join(parts) or "-")
     if hide_source:
         return body
     return f"{body}\n\n{format_label(f"<a href='{raw_url}'>Source</a>")}"
@@ -103,7 +94,7 @@ async def create_telegraph_page(html_content: str, cli: Client, parse_result: An
     logger.debug(f"创建 Telegraph 页面: title={parse_result.title}")
     me = await cli.get_me()
     page = await Telegraph().create_page(
-        parse_result.title or "无标题",
+        parse_result.title or "-",
         html_content=html_content,
         author_name=f"{me.full_name} | @{me.username}",
         author_url=parse_result.raw_url,
@@ -135,30 +126,6 @@ def get_supported_platforms() -> str:
 
 def format_label(text: str) -> str:
     return f"<b>▎{text}</b>"
-
-
-def get_config_target(update: Message | InlineQuery) -> AnySettingsTarget:
-    if isinstance(update, InlineQuery):
-        return UserSettingsTarget(telegram_user_id=update.from_user.id)
-
-    if update.chat and update.chat.id is not None and update.chat.type == ChatType.CHANNEL:
-        return ChannelSettingsTarget(telegram_chat_id=update.chat.id)
-
-    if not update.from_user:
-        raise ValueError("缺少配置目标用户")
-
-    thread_id = update.message_thread_id
-    if update.chat and update.chat.id is not None and thread_id:
-        return ForumTopicMemberSettingsTarget(
-            telegram_chat_id=update.chat.id,
-            telegram_thread_id=thread_id,
-            telegram_user_id=update.from_user.id,
-        )
-
-    if update.chat and update.chat.id is not None and update.chat.type in [ChatType.GROUP, ChatType.SUPERGROUP]:
-        return GroupMemberSettingsTarget(telegram_chat_id=update.chat.id, telegram_user_id=update.from_user.id)
-
-    return UserSettingsTarget(telegram_user_id=update.from_user.id)
 
 
 def parse_channel_ref(value: str) -> int | str:

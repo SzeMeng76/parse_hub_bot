@@ -36,13 +36,13 @@ from core import bs
 from db import get_session
 from i18n import t_
 from log import logger
+from plugins.context import get_config_target
 from plugins.filters import forwarded_from_bot_filter, platform_filter, via_me_filter
 from plugins.helpers import (
     build_caption,
     build_caption_by_str,
     create_richtext_telegraph,
     format_label,
-    get_config_target,
 )
 from repo.settings import DefaultMode, SettingsConfig
 from services import (

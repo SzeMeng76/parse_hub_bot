@@ -513,8 +513,8 @@ async def resolve_channel_target(
 
     try:
         channel = parse_channel_ref(channel_ref)
-    except Exception as e:
-        await msg.reply(str(e))
+    except Exception:
+        await msg.reply(_t("链接格式无效"))
         return None
     try:
         chat = await client.get_chat(channel)
