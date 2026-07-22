@@ -2,7 +2,7 @@ import asyncio
 import os
 from collections.abc import Awaitable, Callable, Sequence
 from itertools import batched
-from typing import Any, BinaryIO, Literal, cast
+from typing import Any, BinaryIO, cast
 
 from easy_ai18n import PreLocaleSelector
 from parsehub.types import (
@@ -44,7 +44,7 @@ from plugins.helpers import (
     format_label,
     get_config_target,
 )
-from repo.settings import DEFAULT_CONFIG, SettingsConfig
+from repo.settings import DefaultMode, SettingsConfig
 from services import (
     CacheEntry,
     CacheMedia,
@@ -98,14 +98,14 @@ async def _send_with_rate_limit[T](
 class MessageStatusReporter(StatusReporter):
     """基于 Telegram Message 的状态报告器"""
 
-    def __init__(self, user_msg: Message, *, _t: PreLocaleSelector, user_config: SettingsConfig):
+    def __init__(self, user_msg: Message, *, _t: PreLocaleSelector, config: SettingsConfig):
         self._user_msg = user_msg
         self._msg: Message | None = None
         self._t = _t
-        self._user_config = user_config
+        self._config = config
 
     async def report(self, text: str) -> None:
-        if self._user_config.noprogress:
+        if self._config.noprogress:
             return
         await self._edit_text(format_label(text))
 
@@ -118,7 +118,7 @@ class MessageStatusReporter(StatusReporter):
             text,
             link_preview_options=LinkPreviewOptions(is_disabled=True),
         )
-        if self._user_config.keep_error_log:
+        if self._config.keep_error_log:
             return
 
         async def fn() -> None:
@@ -154,30 +154,29 @@ class MessageStatusReporter(StatusReporter):
     | ((filters.text | filters.caption) & ~via_me_filter & platform_filter(True) & ~forwarded_from_bot_filter)
 )
 async def jx(cli: Client, msg: Message) -> None:
-    mode = "preview"
     bypass_cache = False
     lang = None
-    user_config = DEFAULT_CONFIG
+    mode = DefaultMode.PREVIEW
 
-    if msg.from_user:
-        async with get_session() as session:
+    async with get_session() as session:
+        if msg.from_user:
             lang = await UserService(session).get_lang(msg.from_user.id)
-            user_config = await SettingsService(session).get_config(get_config_target(msg))
-            mode = user_config.default_mode
+        config = await SettingsService(session).get_config(get_config_target(msg))
+        mode = config.default_mode
 
     _t = t_[lang]
 
     if msg.command:
         match msg.command[0]:
             case "raw":
-                mode = "raw"
+                mode = DefaultMode.RAW
             case "jx":
-                mode = "preview"
+                mode = DefaultMode.PREVIEW
             case "jxjx":
-                mode = "preview"
+                mode = DefaultMode.PREVIEW
                 bypass_cache = True
             case "zip":
-                mode = "zip"
+                mode = DefaultMode.ZIP
 
         text = " ".join(msg.command[1:]) if msg.command[1:] else ""
         if not text and msg.reply_to_message:
@@ -201,10 +200,10 @@ async def jx(cli: Client, msg: Message) -> None:
             msg,
             url=url,
             mode=mode,
-            delete_share_url_msg=user_config.auto_delete_url,
+            delete_share_url_msg=config.auto_delete_url,
             bypass_cache=bypass_cache,
             _t=_t,
-            user_config=user_config,
+            config=config,
         )
         for url in urls
     ]
@@ -224,11 +223,11 @@ async def _handle_parse_request(
     msg: Message,
     *,
     url: str,
-    mode: Literal["raw", "preview", "zip"] | str = "preview",
+    mode: DefaultMode = DefaultMode.PREVIEW,
     delete_share_url_msg: bool = False,
     bypass_cache: bool = False,
     _t: PreLocaleSelector,
-    user_config: SettingsConfig,
+    config: SettingsConfig,
 ) -> None:
     try:
         await handle_parse(
@@ -239,7 +238,7 @@ async def _handle_parse_request(
             delete_share_url_msg=delete_share_url_msg,
             bypass_cache=bypass_cache,
             _t=_t,
-            user_config=user_config,
+            config=config,
         )
     except ParseRateLimitExceeded as e:
         if e.should_notify:
@@ -270,11 +269,11 @@ async def handle_parse(
     msg: Message,
     *,
     url: str,
-    mode: Literal["raw", "preview", "zip"] | str = "preview",
+    mode: DefaultMode = DefaultMode.PREVIEW,
     delete_share_url_msg: bool = False,
     bypass_cache: bool = False,
     _t: PreLocaleSelector,
-    user_config: SettingsConfig,
+    config: SettingsConfig,
 ) -> None:
     chat_id = msg.chat.id if msg.chat else None
     logger.info(f"收到解析请求: url={url}, chat_id={chat_id}, msg_id={msg.id}, mode={mode}")
@@ -287,23 +286,22 @@ async def handle_parse(
         except Exception as e:
             logger.warning(f"删除分享链接消息失败: chat_id={chat_id}, msg_id: {msg.id}, error: {e}")
 
-    reporter = MessageStatusReporter(msg, _t=_t, user_config=user_config)
-    match mode:
-        case "raw":
-            use_caching = False
-            skip_media_processing = True
-            singleflight = False
-            save_metadata = False
-        case "zip":
-            use_caching = False
-            skip_media_processing = True
-            singleflight = False
-            save_metadata = True
-        case _:
-            use_caching = True
-            skip_media_processing = False
-            singleflight = not bypass_cache
-            save_metadata = False
+    reporter = MessageStatusReporter(msg, _t=_t, config=config)
+    if mode == DefaultMode.RAW:
+        use_caching = False
+        skip_media_processing = True
+        singleflight = False
+        save_metadata = False
+    elif mode == DefaultMode.ZIP:
+        use_caching = False
+        skip_media_processing = True
+        singleflight = False
+        save_metadata = True
+    else:
+        use_caching = True
+        skip_media_processing = False
+        singleflight = not bypass_cache
+        save_metadata = False
     try:
         raw_url = await ParseService().get_raw_url(url)
     except Exception as e:
@@ -312,7 +310,7 @@ async def handle_parse(
 
     if use_caching and not bypass_cache and (cached := await persistent_cache.get(raw_url)):
         logger.debug("file_id 缓存命中, 直接发送")
-        await _send_cached(msg, cached, raw_url, user_config=user_config)
+        await _send_cached(msg, cached, raw_url, user_config=config)
         return
 
     cached_parse_result = None if bypass_cache else await parse_cache.get(raw_url)
@@ -324,7 +322,9 @@ async def handle_parse(
         singleflight=singleflight,
         skip_media_processing=skip_media_processing,
         skip_download_threshold=SKIP_DOWNLOAD_THRESHOLD,
-        gif_only_skip_download_count_threshold=GIF_ONLY_SKIP_DOWNLOAD_COUNT_THRESHOLD if mode == "preview" else 0,
+        gif_only_skip_download_count_threshold=(
+            GIF_ONLY_SKIP_DOWNLOAD_COUNT_THRESHOLD if mode == DefaultMode.PREVIEW else 0
+        ),
         save_metadata=save_metadata,
         _t=_t,
     ) as pipeline:
@@ -332,17 +332,9 @@ async def handle_parse(
             if pipeline.waited:
                 logger.debug("Singleflight 等待完成, 重新检查缓存")
                 if not bypass_cache and (cached := await persistent_cache.get(raw_url)):
-                    await _send_cached(msg, cached, raw_url, user_config=user_config)
+                    await _send_cached(msg, cached, raw_url, user_config=config)
                 else:
-                    await handle_parse(
-                        cli,
-                        msg,
-                        url=url,
-                        mode=mode,
-                        bypass_cache=bypass_cache,
-                        _t=_t,
-                        user_config=user_config,
-                    )
+                    await handle_parse(cli, msg, url=url, mode=mode, bypass_cache=bypass_cache, _t=_t, config=config)
                     return
             else:
                 logger.debug("Pipeline 返回 None, 跳过后续处理")
@@ -357,7 +349,7 @@ async def handle_parse(
             await msg.reply_chat_action(enums.ChatAction.TYPING)
             ph_url = await create_richtext_telegraph(cli, parse_result)
             logger.debug(f"Telegraph 页面创建完成: {ph_url}")
-            caption = build_caption(parse_result, ph_url, hide_source=user_config.hide_source)
+            caption = build_caption(parse_result, ph_url, hide_source=config.hide_source)
             await _send_with_rate_limit(
                 lambda: msg.reply_text(
                     caption,
@@ -374,9 +366,13 @@ async def handle_parse(
             await reporter.dismiss()
             return
 
-        caption = build_caption(parse_result, hide_source=user_config.hide_source)
+        caption = build_caption(parse_result, hide_source=config.hide_source)
         gif_only = all(isinstance(i, AniRef) for i in to_list(parse_result.media))
-        if mode == "preview" and gif_only and len(to_list(parse_result.media)) > GIF_ONLY_SKIP_DOWNLOAD_COUNT_THRESHOLD:
+        if (
+            mode == DefaultMode.PREVIEW
+            and gif_only
+            and len(to_list(parse_result.media)) > GIF_ONLY_SKIP_DOWNLOAD_COUNT_THRESHOLD
+        ):
             await _send_with_rate_limit(
                 lambda: msg.reply_text(
                     caption,
@@ -403,11 +399,11 @@ async def handle_parse(
             await reporter.dismiss()
             return
 
-        if mode == "raw":
-            await _send_raw(msg, result, reporter, _t=_t, user_config=user_config)
+        if mode == DefaultMode.RAW:
+            await _send_raw(msg, result, reporter, _t=_t, user_config=config)
             return
-        if mode == "zip":
-            await _send_zip(msg, result, reporter, _t=_t, user_config=user_config)
+        if mode == DefaultMode.ZIP:
+            await _send_zip(msg, result, reporter, _t=_t, user_config=config)
             return
 
         # ── 上传媒体 ──

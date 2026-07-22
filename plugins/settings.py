@@ -14,7 +14,7 @@ from pyrogram.types import InlineKeyboardMarkup as Ikm
 from db import get_session
 from db.models.settings import SettingsScope
 from i18n import t_
-from plugins.helpers import format_label
+from plugins.helpers import format_label, parse_channel_ref
 from repo.settings import DefaultMode, SettingsConfig
 from repo.settings.schema import ConfigMetadata
 from services import SettingsService, UserService
@@ -34,8 +34,6 @@ CfgAction = Literal["t", "m", "b", "p", "o"]
 CfgScopeCode = Literal["u", "g", "gm", "ft", "ftm", "c"]
 # /cfg 页面短码：main=配置主页, platform=平台管理页。
 CfgPage = Literal["main", "platform"]
-# 可由 bool 开关按钮直接切换的 SettingsConfig 字段。
-BoolSwitchField = Literal["enable_inline_raw_url", "keep_error_log", "hide_source", "noprogress", "auto_delete_url"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,7 +78,7 @@ class SettingsViewModel:
 
 @dataclass(frozen=True, slots=True)
 class BoolSwitchDTO:
-    field: BoolSwitchField
+    field: str
     code: str
     label: PostLocaleSelector
     get_value: Callable[[SettingsConfig], bool]
@@ -137,7 +135,7 @@ async def cfg(client: Client, msg: Message) -> None:
         lang = await UserService(session).get_lang(msg.from_user.id)
         _t = t_[lang]
 
-    channel_ref = parse_cfg_arg(msg.text or "")
+    channel_ref = msg.command[1] if msg.command and msg.command[1:] else None
     if channel_ref:
         target = await resolve_channel_target(client, msg, _t, channel_ref)
         if not target:
@@ -191,7 +189,7 @@ async def cfg_callback(client: Client, cq: CallbackQuery) -> None:
             case "t":
                 pass
             case "m":
-                selected = cast(DefaultMode, data.value)
+                selected = DefaultMode(data.value)
                 if not await ensure_cfg_field(cq, _t, target, "default_mode"):
                     return
                 await settings.patch_config(target, default_mode=selected)
@@ -269,20 +267,21 @@ def build_cfg_target_markup(vm: SettingsViewModel) -> Ikm:
 def build_cfg_main_markup(_t: PreLocaleSelector, vm: SettingsViewModel) -> Ikm:
     rows: list[list[Ikb]] = []
     mode_map = {
-        "preview": _t("预览"),
-        "raw": _t("原始"),
-        "zip": _t("压缩"),
+        DefaultMode.PREVIEW: _t("预览"),
+        DefaultMode.RAW: _t("原始"),
+        DefaultMode.ZIP: _t("压缩"),
     }
     if "default_mode" in vm.allowed_fields:
-        rows.append([Ikb(_t("解析模式"), callback_data="placeholder", style=ButtonStyle.PRIMARY)])
+        rows.append([Ikb(_t("默认解析模式"), callback_data="placeholder", style=ButtonStyle.PRIMARY)])
         rows.append(
             [
                 Ikb(
                     label,
-                    callback_data=cfg_callback_data("m", value, vm.target),
+                    callback_data=cfg_callback_data("m", value.value, vm.target),
                     style=ButtonStyle.PRIMARY if value == vm.config.default_mode else ButtonStyle.DEFAULT,
                 )
-                for value, label in mode_map.items()
+                for value in DefaultMode
+                for label in [mode_map[value]]
             ]
         )
 
@@ -313,7 +312,7 @@ def build_cfg_platform_markup(vm: SettingsViewModel) -> Ikm:
         for p in list(Platform)
     ]
     rows = [list(row) for row in batched(ikbs, 2)]
-    rows.append([Ikb("返回配置页", callback_data=cfg_callback_data("o", "main", vm.target))])
+    rows.append([Ikb("返回", callback_data=cfg_callback_data("o", "main", vm.target))])
     return Ikm(rows)
 
 
@@ -370,7 +369,7 @@ async def build_cfg_target_options(client: Client, msg: Message, _t: PreLocaleSe
         return [CfgTargetOption(_t("个人配置"), "u", UserSettingsTarget(telegram_user_id=msg.from_user.id))]
 
     if msg.chat.type not in [ChatType.GROUP, ChatType.SUPERGROUP, ChatType.FORUM]:
-        await msg.reply(_t("请在私聊、群组、话题或使用 /cfg <频道> 配置。"))
+        await msg.reply(format_label(_t("请在私聊, 群组, 话题发送或使用 `/cfg <频道用户名/链接/id>` 进行配置")))
         return []
 
     is_admin = await is_chat_admin(client, chat_id, msg.from_user.id)
@@ -494,12 +493,12 @@ async def ensure_cfg_permission(
         case GroupSettingsTarget(telegram_chat_id=chat_id) | ForumTopicSettingsTarget(telegram_chat_id=chat_id):
             if await is_chat_admin(client, chat_id, cq.from_user.id):
                 return True
-            await cq.answer(_t("你不是该聊天的管理员，无权修改配置。"), show_alert=True)
+            await cq.answer(_t("你不是该聊天的管理员, 无权修改配置"), show_alert=True)
             return False
         case ChannelSettingsTarget(telegram_chat_id=chat_id):
             if await is_chat_owner(client, chat_id, cq.from_user.id):
                 return True
-            await cq.answer(_t("你不是该频道的拥有者，无权修改频道配置。"), show_alert=True)
+            await cq.answer(_t("你不是该频道的拥有者, 无权修改频道配置"), show_alert=True)
             return False
 
 
@@ -513,42 +512,25 @@ async def resolve_channel_target(
         return None
 
     try:
-        chat = await client.get_chat(parse_channel_ref(channel_ref))
+        channel = parse_channel_ref(channel_ref)
+    except Exception as e:
+        await msg.reply(str(e))
+        return None
+    try:
+        chat = await client.get_chat(channel)
     except Exception:
-        await msg.reply(_t("Bot 未加入该频道，请先将 Bot 加入频道后再配置。"))
+        await msg.reply(_t("Bot 未加入该频道, 请先将 Bot 加入频道后再配置"))
         return None
 
     if chat.id is None:
-        await msg.reply(_t("Bot 未加入该频道，请先将 Bot 加入频道后再配置。"))
+        await msg.reply(_t("Bot 未加入该频道, 请先将 Bot 加入频道后再配置"))
         return None
 
     if not await is_chat_owner(client, chat.id, msg.from_user.id):
-        await msg.reply(_t("你不是该频道的拥有者，无权修改频道配置。"))
+        await msg.reply(_t("你不是该频道的拥有者, 无权修改频道配置"))
         return None
 
     return ChannelSettingsTarget(telegram_chat_id=chat.id)
-
-
-def parse_cfg_arg(text: str) -> str | None:
-    parts = text.split(maxsplit=1)
-    if len(parts) < 2:
-        return None
-    return parts[1].strip() or None
-
-
-def parse_channel_ref(value: str) -> int | str:
-    value = value.strip()
-    if value.lstrip("-").isdigit():
-        return int(value)
-    if value.startswith("https://t.me/"):
-        value = value.removeprefix("https://t.me/")
-    elif value.startswith("http://t.me/"):
-        value = value.removeprefix("http://t.me/")
-    elif value.startswith("t.me/"):
-        value = value.removeprefix("t.me/")
-    if not value.startswith("@"):
-        value = f"@{value}"
-    return value
 
 
 async def is_chat_admin(client: Client, chat_id: int | str, user_id: int) -> bool:

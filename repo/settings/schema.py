@@ -1,5 +1,5 @@
-from enum import Enum
-from typing import Annotated, Literal
+from enum import Enum, StrEnum
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -7,7 +7,12 @@ from db.models.settings import SettingsScope
 
 CURRENT_SCHEMA_VERSION = 1
 
-DefaultMode = Literal["preview", "raw", "zip"]
+
+class DefaultMode(StrEnum):
+    PREVIEW = "preview"
+    RAW = "raw"
+    ZIP = "zip"
+
 
 ALL_SCOPES = frozenset(SettingsScope)
 
@@ -41,7 +46,7 @@ class SettingsConfig(BaseModel):
         DefaultMode,
         Field(description="默认解析模式"),
         ConfigMetadata(ALL_SCOPES, MergeStrategy.PREFERENCE),
-    ] = "preview"
+    ] = DefaultMode.PREVIEW
 
     auto_delete_url: Annotated[
         bool,

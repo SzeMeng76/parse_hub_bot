@@ -1,5 +1,8 @@
 """plugins 共用的工具函数和数据类"""
 
+import re
+from urllib.parse import urlsplit
+
 from easy_ai18n.core import LocaleContent
 from markdown import markdown
 from parsehub import ParseHub, Platform
@@ -156,3 +159,47 @@ def get_config_target(update: Message | InlineQuery) -> AnySettingsTarget:
         return GroupMemberSettingsTarget(telegram_chat_id=update.chat.id, telegram_user_id=update.from_user.id)
 
     return UserSettingsTarget(telegram_user_id=update.from_user.id)
+
+
+def parse_channel_ref(value: str) -> int | str:
+    """解析频道 ID、用户名或 Telegram 链接，忽略 URL 参数、片段和消息 ID。"""
+    channel_id_re = re.compile(r"-100\d{1,19}\Z")
+    internal_channel_id_re = re.compile(r"[1-9]\d{0,19}\Z")
+    username_re = re.compile(r"[A-Za-z][A-Za-z0-9_]{4,31}\Z")
+    telegram_link_hosts = frozenset({"t.me", "telegram.me"})
+
+    value = value.strip()
+    if not value:
+        raise ValueError("频道引用不能为空")
+
+    if channel_id_re.fullmatch(value):
+        return int(value)
+
+    url = urlsplit(value if "://" in value else f"https://{value}")
+    if url.netloc.lower() in telegram_link_hosts:
+        if url.scheme not in {"http", "https"}:
+            raise ValueError("仅支持 HTTP 或 HTTPS Telegram 链接")
+
+        path_parts = tuple(part for part in url.path.split("/") if part)
+        match path_parts:
+            case ("c", internal_channel_id) | ("c", internal_channel_id, _):
+                if not internal_channel_id_re.fullmatch(internal_channel_id):
+                    raise ValueError("无效的 /c/ 频道链接")
+                return int(f"-100{internal_channel_id}")
+
+            case (username,):
+                if username_re.fullmatch(username):
+                    return f"@{username}"
+                raise ValueError("频道用户名格式无效")
+
+            case _:
+                raise ValueError("Telegram 链接必须包含用户名或 /c/ 频道 ID")
+
+    if "://" in value:
+        raise ValueError("仅支持 t.me 或 telegram.me 链接")
+
+    username = value.removeprefix("@")
+    if not username_re.fullmatch(username):
+        raise ValueError("频道用户名格式无效")
+
+    return f"@{username}"
