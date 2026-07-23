@@ -1,44 +1,22 @@
+024738655610: Opción de "URL original" en línea
+04f706887b08: El bot no se ha unido a este canal, por favor añade el bot al canal
+  antes de configurar
+06778dbf05d5: Gestión de la plataforma
 08fc0528426e: '**▎Cambiado a: {LANG_MAP[selected]}**'
 091d3a0665fa: Configuración del canal
 0c7c37b93cfe: "**▎Error en {stage}:** \n```\n{error}```"
 0d3d68e32996: Ya hay una tarea igual en proceso de análisis, esperando a que termine...
+0f6c4353601e: Enviar archivo original para evitar compresión de calidad
 0f6cedccc5d3: Demasiados GIF, se omite la subida, por favor descarga manualmente
+1a603ac4b55c: Por favor, envía `/cfg` en chat privado, grupo o tema, o usa `/cfg <nombre
+  de usuario/enlace/id del canal>` para configurar
+1d30c358e2a1: Modo de análisis predeterminado
 224e2ccda861: Configuración
 27350d00b70d: Subiendo...
-28fdbb0967e5: '**Envía un enlace para compartir para analizar**
-
-
-  **Plataformas compatibles:**
-
-  <blockquote expandable>{get_supported_platforms()}</blockquote>
-
-
-  **Lista de comandos:**
-
-  <blockquote expandable>/jx <enlace> - Analizar y enviar medios
-
-  /raw <enlace> - No procesar medios, enviar archivo original
-
-  /zip <enlace> - No procesar medios, guardar resultado del análisis, enviar archivo
-  comprimido
-
-  /jxjx <enlace> - Omitir caché, analizar y enviar medios
-
-  /lang - Seleccionar idioma
-
-  /cfg - Configuración
-
-  /cfg <nombre de usuario/enlace/id del canal> - Configuración del canal
-
-  </blockquote>
-
-
-  **Código abierto: [GitHub](https://github.com/z-mio/parse_hub_bot)**'
-29069ad5b5dc: El objetivo de configuración actual no admite esta opción de configuración
+295bb704f520: Idioma
 2b256f16d436: '** ▎Ya se han eliminado automáticamente {status} mensajes con enlaces
   compartidos **'
 2bc28481a223: Eliminar automáticamente mensajes con enlaces
-2bedfd29c9d3: Configuración personal del tema
 30364e475d07: Esta no es tu acción
 3065ed13e5f9: Obtener enlace original
 32327b34a026: '**Enviar enlace para compartir para análisis**
@@ -79,11 +57,11 @@
 34f3f7d5372a: '**▎Enlace de descarga GIF**'
 36c680f6f5b0: Activar/Desactivar análisis de plataforma
 3795485677d6: Configuración del grupo
+39b75e75d433: Portada del vídeo
 3d3eeb2bc9cd: Opción de configuración desconocida
 405ba1795958: Configuración del tema
 44a77d4ad4ca: Sin título
 460ce129a523: Descargando...
-476341eef8d4: Configuración personal del grupo
 4fb5f29ee802: Por favor añade un enlace o responde a un mensaje
 4fbdbeb0f163: '
 
@@ -104,46 +82,78 @@
 5a9f36a77173: Empaquetar
 5b943dc87178: Enlace de descarga del GIF
 5bc4920f7c82: "{format_label(f'{stage}错误:')} \n```\n{error}```"
-5f6fd976d304: Panel de configuración - {option.label}
+5f411223ca5a: Volver
 5fcfdc5f95ad: '**▎Seleccionar modo de análisis predeterminado**'
-61d21d2dfcda: No eres el propietario de este canal, no tienes permiso para modificar
-  la configuración del canal.
 645dbc5504e7: Vista previa
 6536e2506f73: Activar/Desactivar eliminación automática de mensajes con enlaces compartidos
 6612548ad85b: Comprimir
+6740d8c7b274: Responder al mensaje
+6769c172299c: No eres administrador de este chat, no tienes permiso para modificar
+  la configuración
 68957ac274c5: Descargando... | {current * 100 / total:.0f}%
 710ad08b1141: Desactivar
+'734176584215': No eres el propietario de este canal, no tienes permiso para modificar
+  la configuración del canal
+769d88e425e0: Completado
 77274b54a324: 'Error en {stage}:'
 773e37502413: '**▎Análisis demasiado frecuente, por favor intente de nuevo en {e.retry_after:.1f}s**'
 7854b52a889b: Activar
-7dddeef5a448: Por favor configura en chat privado, grupo, tema o usa /cfg <canal>.
 816de50b9e0e: Por favor, introduce un enlace en el chat
 868afb493654: Seleccionar objetivo de configuración
+8a8672da4ab7: Opción de configuración no soportada
 8c028b35f75a: '**▎Cambiado a: {MODE_MAP[selected]}**'
 8f555aa82c87: Enlace original
 929107a1e13c: '**▎Por favor añade un enlace o responde a un mensaje**'
+945599b91845: Desactivar progreso de análisis
 996ebe10260e: '**▎Demasiados GIF, se omite la subida, por favor descargue usted mismo**'
+9b3dbf3e3f85: Ocultar "Fuente" en la parte inferior
 9dbc542be826: Ocultar progreso de análisis
-9f742eb29051: Análisis de plataforma de gestión
 a3e3b88377c8: Iniciar
 a4ce27c8e465: '**▎Interruptor de función**'
 aa357cb96ee8: Analizar
 ad66098d7867: Conservar registros de errores
-b37e9cdc2727: Panel de configuración - Configuración del canal
 b3bbb48dcb10: Análisis demasiado frecuente, por favor intenta de nuevo en {e.retry_after:.1f}s
+b6aaf8f2a2be: Configuración personal en el grupo
 b765e4eb1844: Enlace original
 b8918b19e2a1: '**▎Activar / Desactivar análisis de plataforma**'
 b8a95e74574c: No procesar medios, enviar archivo original
 be6f406c8f81: Configuración personal
+bebccdf7a76e: Formato de enlace inválido
 c039b80e17dd: Análisis agregado
 c1ecedab11bc: Original
 c2236f70c559: Analizar sin usar caché
 c25add78a072: "{t} \n```\n{error}```"
 c589bcdf2a2b: '\n\n**Comentarios sobre el problema: @MisakaSisters**'
-ca1d9361a348: Panel de configuración - {vm.target_label}
+c97827ba89ec: '**Envía un enlace para analizar**
+
+
+  **Plataformas soportadas:**
+
+  <blockquote expandable>{get_supported_platforms()}</blockquote>
+
+
+  **Lista de comandos:**
+
+  <blockquote expandable>/jx <enlace> - Analizar y previsualizar contenido
+
+  /raw <enlace> - Enviar archivo original para evitar compresión de calidad
+
+  /zip <enlace> - Enviar empaquetado con información de análisis
+
+  /jxjx <enlace> - Analizar saltándose la caché
+
+  /lang - Idioma
+
+  /cfg - Configuración
+
+  /cfg <nombre de usuario/enlace/id del canal> - Configuración del canal
+
+  </blockquote>
+
+
+  **Código abierto: [GitHub](https://github.com/z-mio/parse_hub_bot)**'
+d2282636abc7: Panel de configuración
 d5631690265c: No se puede reconocer el objetivo de configuración
-d59b8a91f638: El Bot no se ha unido a este canal, por favor añade el Bot al canal
-  antes de configurar.
 d59c948c471c: Analizando...
 d5a73b0c7f2f: Subir
 d6fa702190b6: Establecer modo de análisis predeterminado
@@ -151,10 +161,11 @@ d7146da48b3e: Otros interruptores de funciones
 d915366ac40b: No procesar medios, guardar resultado del análisis, enviar archivo comprimido
 da72eb8457df: Ocultar el hipervínculo de Source en la parte inferior
 e14de27e8559: '{target_label}'
+e3ab31c8d89c: Analizar y previsualizar contenido
 e4f6307e1c4f: 'Cambiado a: {LANG_MAP[selected]}'
 e67a8324684f: ▎**Para usar en el grupo, es necesario otorgar al Bot permisos para
   eliminar mensajes**
 e73189b92dbd: Opción para enviar URL sin procesar en línea
-f346c4e88ebb: No eres administrador de este chat, no tienes permiso para modificar
-  la configuración.
+f047ff589a7a: Enviar empaquetado con información de análisis
 ff71243806c8: Seleccionar idioma
+ff7e330bebf8: Configuración personal en el tema

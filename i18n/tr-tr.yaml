@@ -1,43 +1,20 @@
+024738655610: Satır içi "Orijinal URL" seçeneği
+04f706887b08: Bot bu kanala katılmadı, lütfen önce Botu kanala ekleyin ve sonra yapılandırın
+06778dbf05d5: Platform yönetimi
 08fc0528426e: '**▎Şu an seçili: {LANG_MAP[selected]}**'
 091d3a0665fa: Kanal Yapılandırması
 0c7c37b93cfe: "**▎{stage} Hata:** \n```\n{error}```"
 0d3d68e32996: Aynı görev zaten çözülüyor, çözüm tamamlanana kadar bekleyin...
+0f6c4353601e: Orijinal dosyayı gönder, kalite sıkıştırmasını önle
 0f6cedccc5d3: GIF çok fazla, yükleme atlandı, lütfen kendiniz indirin
+1a603ac4b55c: Lütfen özel mesajda, grupta veya konularda `/cfg` komutunu gönderin
+  veya `/cfg <kanal kullanıcı adı/link/id>` ile yapılandırın
+1d30c358e2a1: Varsayılan çözümleme modu
 224e2ccda861: Yapılandırma
 27350d00b70d: Yükleniyor...
-28fdbb0967e5: '**Çözümleme için paylaşım linki gönderin**
-
-
-  **Desteklenen platformlar:**
-
-  <blockquote expandable>{get_supported_platforms()}</blockquote>
-
-
-  **Komut listesi:**
-
-  <blockquote expandable>/jx <link> - Medyayı çözümle ve gönder
-
-  /raw <link> - Medyayı işlemeyin, orijinal dosyayı gönder
-
-  /zip <link> - Medyayı işlemeyin, çözümleme sonucunu kaydet, sıkıştırılmış dosya
-  gönder
-
-  /jxjx <link> - Önbelleği atla, çözümle ve medyayı gönder
-
-  /lang - Dil seç
-
-  /cfg - Yapılandırma
-
-  /cfg <kanal kullanıcı adı/link/id> - Kanal yapılandırması
-
-  </blockquote>
-
-
-  **Açık kaynak adresi: [GitHub](https://github.com/z-mio/parse_hub_bot)**'
-29069ad5b5dc: Mevcut yapılandırma hedefi bu yapılandırma öğesini desteklemiyor
+295bb704f520: Dil
 2b256f16d436: '** ▎{status} otomatik olarak paylaşılan bağlantı mesajı silindi **'
 2bc28481a223: Bağlantı mesajlarını otomatik sil
-2bedfd29c9d3: Konu kişisel yapılandırması
 30364e475d07: Bu senin işlemin değil
 3065ed13e5f9: Orijinal bağlantıyı al
 32327b34a026: '**Paylaşım bağlantısını çözümlemek için gönderin**
@@ -78,11 +55,11 @@
 34f3f7d5372a: '**▎GIF İndirme Bağlantısı**'
 36c680f6f5b0: Platform çözümlemeyi etkinleştir/devre dışı bırak
 3795485677d6: Grup yapılandırması
+39b75e75d433: Video kapağı
 3d3eeb2bc9cd: Bilinmeyen yapılandırma öğesi
 405ba1795958: Konu yapılandırması
 44a77d4ad4ca: Başlıksız
 460ce129a523: İndiriliyor...
-476341eef8d4: Grup kişisel yapılandırması
 4fb5f29ee802: Lütfen bir link ekleyin veya bir mesaja yanıt verin
 4fbdbeb0f163: '
 
@@ -102,47 +79,80 @@
 5a9f36a77173: Paketle
 5b943dc87178: GIF indirme linki
 5bc4920f7c82: "{format_label(f'{stage}错误:')} \n```\n{error}```"
-5f6fd976d304: Yapılandırma paneli - {option.label}
+5f411223ca5a: Geri
 5fcfdc5f95ad: '**▎Varsayılan çözümleme modunu seç**'
-61d21d2dfcda: Bu kanalın sahibi değilsiniz, kanal yapılandırmasını değiştirme yetkiniz
-  yok.
 645dbc5504e7: Önizleme
 6536e2506f73: Otomatik paylaşım bağlantısı mesajlarını etkinleştir/devre dışı bırak
 6612548ad85b: Sıkıştır
+6740d8c7b274: Mesaja yanıt ver
+6769c172299c: Bu sohbetin yöneticisi değilsiniz, yapılandırmayı değiştirme yetkiniz
+  yok
 68957ac274c5: İndiriliyor... | {current * 100 / total:.0f}%
 710ad08b1141: Devre dışı bırak
+'734176584215': Bu kanalın sahibi değilsiniz, kanal yapılandırmasını değiştirme yetkiniz
+  yok
+769d88e425e0: Tamamlandı
 77274b54a324: '{stage} hata:'
 773e37502413: '**▎Çözümleme çok sık yapılıyor, lütfen {e.retry_after:.1f} saniye sonra
   tekrar deneyin**'
 7854b52a889b: Etkinleştir
-7dddeef5a448: Lütfen özel mesajda, grupta, konuda veya /cfg <kanal> kullanarak yapılandırın.
 816de50b9e0e: Lütfen sohbet kutusuna bağlantı girin
 868afb493654: Yapılandırma hedefi seçin
+8a8672da4ab7: Desteklenmeyen yapılandırma öğesi
 8c028b35f75a: '**▎Şu an seçili: {MODE_MAP[selected]}**'
 8f555aa82c87: Orijinal bağlantı
 929107a1e13c: '**▎Lütfen bir bağlantı ekleyin veya bir mesaja yanıt verin**'
+945599b91845: Çözümleme ilerlemesini devre dışı bırak
 996ebe10260e: '**▎GIF Çok Fazla, Yükleme Atlandı, Lütfen Kendiniz İndirin**'
+9b3dbf3e3f85: Alt "Kaynak"u gizle
 9dbc542be826: Çözümleme ilerlemesini gizle
-9f742eb29051: Platform yönetimi çözümlemesi
 a3e3b88377c8: Başlat
 a4ce27c8e465: '**▎Fonksiyon Anahtarı**'
 aa357cb96ee8: Çözümle
 ad66098d7867: Hata günlüklerini sakla
-b37e9cdc2727: Yapılandırma paneli - Kanal yapılandırması
 b3bbb48dcb10: Çözümleme çok sık yapılıyor, lütfen {e.retry_after:.1f} saniye sonra
   tekrar deneyin
+b6aaf8f2a2be: Grup içi kişisel yapılandırma
 b765e4eb1844: Orijinal bağlantı
 b8918b19e2a1: '**▎Platform çözümlemeyi etkinleştir/devre dışı bırak**'
 b8a95e74574c: Medya işlenmeyecek, orijinal dosya gönderilecek
 be6f406c8f81: Kişisel yapılandırma
+bebccdf7a76e: Bağlantı formatı geçersiz
 c039b80e17dd: Toplu çözümleme
 c1ecedab11bc: Orijinal
 c2236f70c559: Önbellek çözümlemesini atla
 c25add78a072: "{t} \n```\n{error}```"
 c589bcdf2a2b: '\n\n**Sorun Bildirimi: @MisakaSisters**'
-ca1d9361a348: Yapılandırma paneli - {vm.target_label}
+c97827ba89ec: '**Çözümleme için paylaşım bağlantısı gönderin**
+
+
+  **Desteklenen platformlar:**
+
+  <blockquote expandable>{get_supported_platforms()}</blockquote>
+
+
+  **Komut listesi:**
+
+  <blockquote expandable>/jx <bağlantı> - İçeriği çözümle ve önizle
+
+  /raw <bağlantı> - Orijinal dosyayı gönder, kalite sıkıştırmasını önle
+
+  /zip <bağlantı> - Paket halinde gönder, çözümleme bilgisi ile birlikte
+
+  /jxjx <bağlantı> - Önbelleği atlayarak çözümle
+
+  /lang - Dil
+
+  /cfg - Yapılandırma
+
+  /cfg <kanal kullanıcı adı/link/id> - Kanal yapılandırması
+
+  </blockquote>
+
+
+  **Açık kaynak adresi: [GitHub](https://github.com/z-mio/parse_hub_bot)**'
+d2282636abc7: Yapılandırma paneli
 d5631690265c: Yapılandırma hedefi tanınamadı
-d59b8a91f638: Bot bu kanala katılmadı, lütfen önce Botu kanala ekleyin ve sonra yapılandırın.
 d59c948c471c: Çözülüyor...
 d5a73b0c7f2f: Yükle
 d6fa702190b6: Varsayılan çözümleme modunu ayarla
@@ -151,9 +161,10 @@ d915366ac40b: Medya işlenmeyecek, çözümleme sonucu kaydedilecek, sıkıştı
   gönderilecek
 da72eb8457df: Alt kısımdaki Kaynak bağlantısını gizle
 e14de27e8559: '{target_label}'
+e3ab31c8d89c: İçeriği çözümle ve önizle
 e4f6307e1c4f: '{LANG_MAP[selected]} olarak değiştirildi'
 e67a8324684f: ▎**Grup içinde kullanmak için Bot'a mesaj silme izni verilmelidir**
 e73189b92dbd: Ham URL'yi satır içi gönderme seçeneği
-f346c4e88ebb: Bu sohbetin yöneticisi değilsiniz, yapılandırmayı değiştirme yetkiniz
-  yok.
+f047ff589a7a: Paket halinde gönder, çözümleme bilgisi ile birlikte
 ff71243806c8: Dil seç
+ff7e330bebf8: Konu içi kişisel yapılandırma

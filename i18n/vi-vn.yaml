@@ -1,42 +1,21 @@
+024738655610: Tùy chọn "URL gốc" nội tuyến
+04f706887b08: Bot chưa tham gia kênh này, vui lòng thêm Bot vào kênh trước khi cấu
+  hình
+06778dbf05d5: Quản lý nền tảng
 08fc0528426e: '**▎Đã chuyển sang: {LANG_MAP[selected]}**'
 091d3a0665fa: Cấu hình kênh
 0c7c37b93cfe: "**▎Lỗi {stage}:** \n```\n{error}```"
 0d3d68e32996: Đã có tác vụ giống đang được phân tích, vui lòng chờ hoàn thành...
+0f6c4353601e: Gửi tệp gốc, tránh nén chất lượng hình ảnh
 0f6cedccc5d3: Quá nhiều GIF, bỏ qua tải lên, vui lòng tải xuống thủ công
+1a603ac4b55c: Vui lòng gửi `/cfg` hoặc sử dụng `/cfg <tên người dùng/kênh/liên kết/id>`
+  trong tin nhắn riêng, nhóm hoặc chủ đề để cấu hình
+1d30c358e2a1: Chế độ phân tích mặc định
 224e2ccda861: Cấu hình
 27350d00b70d: Đang tải lên...
-28fdbb0967e5: '**Gửi liên kết chia sẻ để phân tích**
-
-
-  **Nền tảng được hỗ trợ:**
-
-  <blockquote expandable>{get_supported_platforms()}</blockquote>
-
-
-  **Danh sách lệnh:**
-
-  <blockquote expandable>/jx <liên_kết> - Phân tích và gửi phương tiện
-
-  /raw <liên_kết> - Không xử lý phương tiện, gửi tệp gốc
-
-  /zip <liên_kết> - Không xử lý phương tiện, lưu kết quả phân tích, gửi gói nén
-
-  /jxjx <liên_kết> - Bỏ qua bộ nhớ đệm, phân tích và gửi phương tiện
-
-  /lang - Chọn ngôn ngữ
-
-  /cfg - Cấu hình
-
-  /cfg <tên_người_dùng_kênh/liên_kết/id> - Cấu hình kênh
-
-  </blockquote>
-
-
-  **Địa chỉ mã nguồn mở: [GitHub](https://github.com/z-mio/parse_hub_bot)**'
-29069ad5b5dc: Mục cấu hình này không được hỗ trợ bởi mục tiêu cấu hình hiện tại
+295bb704f520: Ngôn ngữ
 2b256f16d436: '** ▎Đã tự động xóa {status} tin nhắn liên kết chia sẻ**'
 2bc28481a223: Tự động xóa tin nhắn liên kết
-2bedfd29c9d3: Cấu hình cá nhân chủ đề
 30364e475d07: Đây không phải thao tác của bạn
 3065ed13e5f9: Lấy liên kết gốc
 32327b34a026: '**Gửi liên kết chia sẻ để phân tích**
@@ -75,11 +54,11 @@
 34f3f7d5372a: '**▎Liên kết tải xuống GIF**'
 36c680f6f5b0: Bật/Tắt phân tích nền tảng
 3795485677d6: Cấu hình nhóm
+39b75e75d433: Ảnh bìa video
 3d3eeb2bc9cd: Mục cấu hình không xác định
 405ba1795958: Cấu hình chủ đề
 44a77d4ad4ca: Không tiêu đề
 460ce129a523: Đang tải xuống...
-476341eef8d4: Cấu hình cá nhân nhóm
 4fb5f29ee802: Vui lòng thêm liên kết hoặc trả lời một tin nhắn
 4fbdbeb0f163: '>**Để đảm bảo trải nghiệm sử dụng cho tất cả người dùng, hiện tại đã
   kích hoạt giới hạn tốc độ**
@@ -97,40 +76,45 @@
 5a9f36a77173: Đóng gói
 5b943dc87178: Liên kết tải xuống GIF
 5bc4920f7c82: "{format_label(f'{stage}错误:')} \n```\n{error}```"
-5f6fd976d304: Bảng điều khiển cấu hình - {option.label}
+5f411223ca5a: Quay lại
 5fcfdc5f95ad: '**▎Chọn chế độ phân tích mặc định**'
-61d21d2dfcda: Bạn không phải là chủ sở hữu của kênh này, không có quyền thay đổi cấu
-  hình kênh.
 645dbc5504e7: Xem trước
 6536e2506f73: Bật/tắt tự động xóa tin nhắn liên kết chia sẻ
 6612548ad85b: Nén
+6740d8c7b274: Trả lời tin nhắn
+6769c172299c: Bạn không phải là quản trị viên của cuộc trò chuyện này, không có quyền
+  thay đổi cấu hình
 68957ac274c5: Đang tải xuống... | {current * 100 / total:.0f}%
 710ad08b1141: Vô hiệu hóa
+'734176584215': Bạn không phải là chủ sở hữu của kênh này, không có quyền thay đổi
+  cấu hình kênh
+769d88e425e0: Hoàn thành
 77274b54a324: 'Lỗi {stage}:'
 773e37502413: '**▎Phân tích quá thường xuyên, vui lòng thử lại sau {e.retry_after:.1f}
   giây**'
 7854b52a889b: Kích hoạt
-7dddeef5a448: Vui lòng cấu hình trong trò chuyện riêng, nhóm, chủ đề hoặc sử dụng
-  /cfg <kênh>.
 816de50b9e0e: Vui lòng nhập liên kết trong hộp chat
 868afb493654: Chọn mục tiêu cấu hình
+8a8672da4ab7: Mục cấu hình không được hỗ trợ
 8c028b35f75a: '**▎Đã chuyển sang: {MODE_MAP[selected]}**'
 8f555aa82c87: Liên kết gốc
 929107a1e13c: '**▎Vui lòng thêm liên kết hoặc trả lời một tin nhắn**'
+945599b91845: Vô hiệu hóa tiến trình phân tích
 996ebe10260e: '**▎Quá nhiều GIF, bỏ qua tải lên, vui lòng tự tải xuống**'
+9b3dbf3e3f85: Ẩn "Nguồn" ở dưới cùng
 9dbc542be826: Ẩn tiến trình phân tích
-9f742eb29051: Quản lý phân tích nền tảng
 a3e3b88377c8: Bắt đầu
 a4ce27c8e465: '**▎Công tắc chức năng**'
 aa357cb96ee8: Phân tích
 ad66098d7867: Giữ lại nhật ký lỗi
-b37e9cdc2727: Bảng điều khiển cấu hình - Cấu hình kênh
 b3bbb48dcb10: Phân tích quá thường xuyên, vui lòng thử lại sau {e.retry_after:.1f}
   giây
+b6aaf8f2a2be: Cấu hình cá nhân trong nhóm
 b765e4eb1844: Liên kết nguyên bản
 b8918b19e2a1: '**▎Bật / Tắt phân tích nền tảng**'
 b8a95e74574c: Không xử lý media, gửi file gốc
 be6f406c8f81: Cấu hình cá nhân
+bebccdf7a76e: Định dạng liên kết không hợp lệ
 c039b80e17dd: Phân tích tổng hợp
 c1ecedab11bc: Gốc
 c2236f70c559: Bypass cache parsing
@@ -139,10 +123,36 @@ c589bcdf2a2b: '
 
 
   **Phản hồi vấn đề: @MisakaSisters**'
-ca1d9361a348: Bảng điều khiển cấu hình - {vm.target_label}
+c97827ba89ec: '**Gửi liên kết chia sẻ để phân tích**
+
+
+  **Các nền tảng được hỗ trợ:**
+
+  <blockquote expandable>{get_supported_platforms()}</blockquote>
+
+
+  **Danh sách lệnh:**
+
+  <blockquote expandable>/jx <liên kết> - Phân tích và xem trước nội dung
+
+  /raw <liên kết> - Gửi tệp gốc, tránh nén chất lượng hình ảnh
+
+  /zip <liên kết> - Gửi gói kèm thông tin phân tích
+
+  /jxjx <liên kết> - Phân tích bỏ qua bộ nhớ đệm
+
+  /lang - Ngôn ngữ
+
+  /cfg - Cấu hình
+
+  /cfg <tên người dùng/kênh/liên kết/id> - Cấu hình kênh
+
+  </blockquote>
+
+
+  **Mã nguồn mở: [GitHub](https://github.com/z-mio/parse_hub_bot)**'
+d2282636abc7: Bảng cấu hình
 d5631690265c: Không thể nhận diện mục tiêu cấu hình
-d59b8a91f638: Bot chưa tham gia kênh này, vui lòng thêm Bot vào kênh trước khi cấu
-  hình.
 d59c948c471c: Đang phân tích...
 d5a73b0c7f2f: Tải lên
 d6fa702190b6: Đặt chế độ phân tích mặc định
@@ -150,9 +160,10 @@ d7146da48b3e: Các công tắc chức năng khác
 d915366ac40b: Không xử lý media, lưu kết quả phân tích, gửi file nén
 da72eb8457df: Hide bottom Source hyperlink
 e14de27e8559: '{target_label}'
+e3ab31c8d89c: Phân tích và xem trước nội dung
 e4f6307e1c4f: 'Đã chuyển sang: {LANG_MAP[selected]}'
 e67a8324684f: ▎**Cần cấp quyền xóa tin nhắn cho Bot trong nhóm**
 e73189b92dbd: Tùy chọn gửi URL gốc nội tuyến
-f346c4e88ebb: Bạn không phải là quản trị viên của cuộc trò chuyện này, không có quyền
-  thay đổi cấu hình.
+f047ff589a7a: Gửi gói kèm thông tin phân tích
 ff71243806c8: Chọn ngôn ngữ
+ff7e330bebf8: Cấu hình cá nhân trong chủ đề
