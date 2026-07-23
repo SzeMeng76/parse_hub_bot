@@ -1,4 +1,5 @@
 import asyncio
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from easy_ai18n import PreLocaleSelector
@@ -11,20 +12,38 @@ from db import get_session
 from log import logger
 from plugins.context import get_config_target
 from plugins.helpers import format_label
+from plugins.parse.sender import MessageSender
 from repo.settings import SettingsConfig
 from services import SettingsService, StatusReporter
 
 logger = logger.bind(name="ParseReporter")
 
 
+async def disable_progress_on_report_forbidden(msg: Message, config: SettingsConfig) -> None:
+    """状态消息无权限时自动关闭解析进度。"""
+    config.noprogress = True
+    target = get_config_target(msg, include_member=False)
+    async with get_session() as session:
+        await SettingsService(session).patch_config(target=target, noprogress=True)
+    logger.warning(f"已自动关闭解析进度: {target}")
+
+
 class MessageStatusReporter(StatusReporter):
     """基于 Telegram Message 的状态报告器"""
 
-    def __init__(self, user_msg: Message, *, _t: PreLocaleSelector, config: SettingsConfig):
+    def __init__(
+        self,
+        user_msg: Message,
+        *,
+        _t: PreLocaleSelector,
+        config: SettingsConfig,
+        on_forbidden: Callable[[Message, SettingsConfig], Awaitable[None]] | None = None,
+    ):
         self._user_msg = user_msg
         self._msg: Message | None = None
         self._t = _t
         self._config = config
+        self._on_forbidden = on_forbidden
 
     async def report(self, text: str) -> None:
         if self._config.noprogress:
@@ -58,20 +77,16 @@ class MessageStatusReporter(StatusReporter):
     async def _edit_text(self, text: str, **kwargs: Any) -> None:
         try:
             if self._msg is None:
-                self._msg = await self._user_msg.reply_text(text, **kwargs)
+                self._msg = await MessageSender(self._user_msg, self._config).text(text, **kwargs)
             else:
                 if self._msg.text != text:
                     await self._msg.edit_text(text, **kwargs)
         except (FloodWait, SlowmodeWait):
             pass
         except Forbidden as e:
-            logger.warning(f"消息发送失败, Bot 无权限: {e}")
-            if self._user_msg:
-                self._config.noprogress = True
-                target = get_config_target(self._user_msg, include_member=False)
-                async with get_session() as session:
-                    await SettingsService(session).patch_config(target=target, noprogress=True)
-                logger.warning(f"已自动关闭解析进度: {target}")
+            logger.warning(f"状态消息发送失败, Bot 无权限: {e}")
+            if self._on_forbidden:
+                await self._on_forbidden(self._user_msg, self._config)
 
 
 class InlineStatusReporter(StatusReporter):

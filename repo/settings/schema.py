@@ -93,9 +93,9 @@ class SettingsConfig(BaseModel):
         ConfigMetadata(ALL_SCOPES, MergeStrategy.PREFERENCE),
     ] = True
 
-    reply_user_msg: Annotated[
+    reply_msg: Annotated[
         bool,
-        Field(description="回复用户消息"),
+        Field(description="回复消息"),
         ConfigMetadata(ALL_SCOPES, MergeStrategy.PREFERENCE),
     ] = True
 

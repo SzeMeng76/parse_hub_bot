@@ -3,8 +3,8 @@ from typing import Any
 
 from easy_ai18n import PreLocaleSelector
 from parsehub.types import AniRef, PostType
-from pyrogram import Client, enums, filters
-from pyrogram.types import LinkPreviewOptions, Message
+from pyrogram import Client, filters
+from pyrogram.types import Message
 
 from core import bs
 from db import get_session
@@ -13,8 +13,8 @@ from log import logger
 from plugins.context import get_config_target
 from plugins.filters import forwarded_from_bot_filter, platform_filter, via_me_filter
 from plugins.helpers import build_caption, create_richtext_telegraph, format_label
-from plugins.parse.reporters import MessageStatusReporter
-from plugins.parse.sender import build_gif_button, send_cached, send_media, send_raw, send_with_rate_limit, send_zip
+from plugins.parse.reporters import MessageStatusReporter, disable_progress_on_report_forbidden
+from plugins.parse.sender import MessageSender, build_gif_button, send_cached, send_media, send_raw, send_zip
 from repo.settings import ParseMode, SettingsConfig
 from services import CacheEntry, CacheParseResult, ParsePipeline, ParseService, SettingsService, UserService
 from services.cache import parse_cache, persistent_cache
@@ -59,7 +59,7 @@ async def jx(cli: Client, msg: Message) -> None:
         if not text and msg.reply_to_message:
             text = msg.reply_to_message.text or msg.reply_to_message.caption or ""
         if not text:
-            await msg.reply_text(format_label(_t("请加上链接或回复一条消息")))
+            await MessageSender(msg, config).text(format_label(_t("请加上链接或回复一条消息")))
             return
     else:
         text = msg.text or msg.caption or ""
@@ -68,7 +68,7 @@ async def jx(cli: Client, msg: Message) -> None:
     urls = list({i for i in tokens if ParseService().parser.get_platform(i)})[:10]
 
     if not urls:
-        await msg.reply_text(format_label(_t("不支持的平台")))
+        await MessageSender(msg, config).text(format_label(_t("不支持的平台")))
         return
 
     tasks = [
@@ -123,7 +123,7 @@ async def _handle_parse_request(
                     "以免触发 Telegram API 全局速率限制\n\n"
                     "**开源地址: [GitHub](https://github.com/z-mio/parse_hub_bot)**"
                 )
-            msg = await msg.reply_text(text, link_preview_options=LinkPreviewOptions(is_disabled=True))
+            msg = await MessageSender(msg, config).text_no_preview(text)
 
             async def fn(retry_after: float) -> None:
                 await asyncio.sleep(retry_after)
@@ -160,7 +160,13 @@ async def handle_parse(
         except Exception as e:
             logger.warning(f"删除分享链接消息失败: chat_id={chat_id}, msg_id: {msg.id}, error: {e}")
 
-    reporter = MessageStatusReporter(msg, _t=_t, config=config)
+    reporter = MessageStatusReporter(
+        msg,
+        _t=_t,
+        config=config,
+        on_forbidden=disable_progress_on_report_forbidden,
+    )
+    sender = MessageSender(msg, config)
     if mode == ParseMode.RAW:
         use_caching = False
         skip_media_processing = True
@@ -184,7 +190,7 @@ async def handle_parse(
 
     if use_caching and not bypass_cache and (cached := await persistent_cache.get(raw_url)):
         logger.debug("file_id 缓存命中, 直接发送")
-        await send_cached(msg, cached, raw_url, config=config)
+        await send_cached(sender, cached, raw_url)
         return
 
     cached_parse_result = None if bypass_cache else await parse_cache.get(raw_url)
@@ -206,7 +212,7 @@ async def handle_parse(
             if pipeline.waited:
                 logger.debug("Singleflight 等待完成, 重新检查缓存")
                 if not bypass_cache and (cached := await persistent_cache.get(raw_url)):
-                    await send_cached(msg, cached, raw_url, config=config)
+                    await send_cached(sender, cached, raw_url)
                 else:
                     await handle_parse(cli, msg, url=url, mode=mode, bypass_cache=bypass_cache, _t=_t, config=config)
                     return
@@ -219,16 +225,11 @@ async def handle_parse(
 
         if parse_result.type == PostType.RICHTEXT:
             logger.debug(f"富文本类型, 创建 Telegraph 页面: title={parse_result.title}")
-            await msg.reply_chat_action(enums.ChatAction.TYPING)
+            await sender.typing()
             ph_url = await create_richtext_telegraph(cli, parse_result)
             logger.debug(f"Telegraph 页面创建完成: {ph_url}")
             caption = build_caption(parse_result, ph_url, hide_source=config.hide_source)
-            await send_with_rate_limit(
-                lambda: msg.reply_text(
-                    caption,
-                    link_preview_options=LinkPreviewOptions(show_above_text=True),
-                )
-            )
+            await sender.text_with_preview_above(caption)
             await persistent_cache.set(
                 raw_url,
                 CacheEntry(
@@ -246,25 +247,14 @@ async def handle_parse(
             and gif_only
             and len(to_list(parse_result.media)) > GIF_ONLY_SKIP_DOWNLOAD_COUNT_THRESHOLD
         ):
-            await send_with_rate_limit(
-                lambda: msg.reply_text(
-                    caption,
-                    reply_markup=build_gif_button(to_list(parse_result.media)),
-                    link_preview_options=LinkPreviewOptions(is_disabled=True),
-                )
-            )
+            await sender.text_no_preview(caption, reply_markup=build_gif_button(to_list(parse_result.media)))
             await reporter.dismiss()
             return
 
         if not result.processed_list:
             logger.debug("无媒体文件, 仅发送文本")
-            await msg.reply_chat_action(enums.ChatAction.TYPING)
-            await send_with_rate_limit(
-                lambda: msg.reply_text(
-                    caption,
-                    link_preview_options=LinkPreviewOptions(is_disabled=True),
-                )
-            )
+            await sender.typing()
+            await sender.text_no_preview(caption)
             cache_entry = CacheEntry(
                 parse_result=CacheParseResult(title=parse_result.title, content=parse_result.content)
             )
@@ -273,17 +263,17 @@ async def handle_parse(
             return
 
         if mode == ParseMode.RAW:
-            await send_raw(msg, result, reporter, _t=_t, user_config=config)
+            await send_raw(sender, result, reporter, _t=_t)
             return
         if mode == ParseMode.ZIP:
-            await send_zip(msg, result, reporter, _t=_t, user_config=config)
+            await send_zip(sender, result, reporter, _t=_t)
             return
 
         logger.debug(f"开始上传媒体: media_count={len(result.processed_list)}")
         await reporter.report(_t("上 传 中..."))
         try:
             media_cache_entry = await send_media(
-                msg, parse_result, result.processed_list, caption, _t=_t, video_cover=config.video_cover
+                sender, parse_result, result.processed_list, caption, _t=_t, video_cover=config.video_cover
             )
             if media_cache_entry:
                 await persistent_cache.set(raw_url, media_cache_entry)
