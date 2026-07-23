@@ -184,7 +184,7 @@ async def handle_parse(
 
     if use_caching and not bypass_cache and (cached := await persistent_cache.get(raw_url)):
         logger.debug("file_id 缓存命中, 直接发送")
-        await send_cached(msg, cached, raw_url, user_config=config)
+        await send_cached(msg, cached, raw_url, config=config)
         return
 
     cached_parse_result = None if bypass_cache else await parse_cache.get(raw_url)
@@ -206,7 +206,7 @@ async def handle_parse(
             if pipeline.waited:
                 logger.debug("Singleflight 等待完成, 重新检查缓存")
                 if not bypass_cache and (cached := await persistent_cache.get(raw_url)):
-                    await send_cached(msg, cached, raw_url, user_config=config)
+                    await send_cached(msg, cached, raw_url, config=config)
                 else:
                     await handle_parse(cli, msg, url=url, mode=mode, bypass_cache=bypass_cache, _t=_t, config=config)
                     return
@@ -282,7 +282,9 @@ async def handle_parse(
         logger.debug(f"开始上传媒体: media_count={len(result.processed_list)}")
         await reporter.report(_t("上 传 中..."))
         try:
-            media_cache_entry = await send_media(msg, parse_result, result.processed_list, caption, _t=_t)
+            media_cache_entry = await send_media(
+                msg, parse_result, result.processed_list, caption, _t=_t, video_cover=config.video_cover
+            )
             if media_cache_entry:
                 await persistent_cache.set(raw_url, media_cache_entry)
             await reporter.dismiss()

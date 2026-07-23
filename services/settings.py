@@ -70,6 +70,7 @@ class ConfigPatch(TypedDict, total=False):
     keep_error_log: bool
     hide_source: bool
     noprogress: bool
+    video_cover: bool
 
 
 class SettingsService:

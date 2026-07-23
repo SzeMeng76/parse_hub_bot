@@ -87,6 +87,18 @@ class SettingsConfig(BaseModel):
         ConfigMetadata(POLICY_SCOPES, MergeStrategy.POLICY),
     ] = False
 
+    video_cover: Annotated[
+        bool,
+        Field(description="启用视频封面"),
+        ConfigMetadata(ALL_SCOPES, MergeStrategy.PREFERENCE),
+    ] = True
+
+    reply_user_msg: Annotated[
+        bool,
+        Field(description="回复用户消息"),
+        ConfigMetadata(ALL_SCOPES, MergeStrategy.PREFERENCE),
+    ] = True
+
     def __str__(self) -> str:
         return self.model_dump_json(indent=4, ensure_ascii=True)
 

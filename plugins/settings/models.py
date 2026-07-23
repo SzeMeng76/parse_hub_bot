@@ -101,7 +101,7 @@ BOOL_SWITCHES = (
     BoolSwitchDTO(
         field="hide_source",
         code="hs",
-        label=t_('隐藏底部「Source」'),
+        label=t_("隐藏底部「Source」"),
         get_value=lambda config: config.hide_source,
         patch=lambda settings, target, value: settings.patch_config(target, hide_source=value),
     ),
@@ -118,6 +118,13 @@ BOOL_SWITCHES = (
         label=t_("自动删除链接消息"),
         get_value=lambda config: config.auto_delete_url,
         patch=lambda settings, target, value: settings.patch_config(target, auto_delete_url=value),
+    ),
+    BoolSwitchDTO(
+        field="video_cover",
+        code="vc",
+        label=t_("视频封面"),
+        get_value=lambda config: config.video_cover,
+        patch=lambda settings, target, value: settings.patch_config(target, video_cover=value),
     ),
 )
 

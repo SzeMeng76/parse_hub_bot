@@ -29,7 +29,7 @@ def make_cache_entry(parse_result: AnyParseResult, media_list: list[CacheMedia])
 
 
 def build_cached_media_group(
-    media: list[CacheMedia],
+    media: list[CacheMedia], *, video_cover: bool
 ) -> list[InputMediaPhoto | InputMediaVideo | InputMediaDocument]:
     """从 CacheMedia 列表构建 Telegram media group。"""
     group: list[InputMediaPhoto | InputMediaVideo | InputMediaDocument] = []
@@ -39,7 +39,13 @@ def build_cached_media_group(
                 group.append(InputMediaPhoto(media=m.file_id))
             case CacheMediaType.VIDEO:
                 if m.cover_file_id:
-                    group.append(InputMediaVideo(media=m.file_id, supports_streaming=True, video_cover=m.cover_file_id))
+                    group.append(
+                        InputMediaVideo(
+                            media=m.file_id,
+                            supports_streaming=True,
+                            video_cover=m.cover_file_id if video_cover else None,
+                        )
+                    )
                 else:
                     group.append(InputMediaVideo(media=m.file_id, supports_streaming=True))
             case CacheMediaType.DOCUMENT:

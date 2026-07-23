@@ -185,10 +185,11 @@ async def send_media(
     caption: str,
     *,
     _t: PreLocaleSelector,
+    video_cover: bool,
 ) -> CacheEntry | None:
     """构建、发送媒体，并返回缓存条目。"""
     media_refs = to_list(parse_result.media)
-    photos_videos, animations = build_input_media(media_refs, processed_list)
+    photos_videos, animations = build_input_media(media_refs, processed_list, video_cover=video_cover)
     all_count = len(photos_videos) + len(animations)
     logger.debug(f"媒体分类完成: animations={len(animations)}, photos_videos={len(photos_videos)}")
 
@@ -204,7 +205,7 @@ async def send_media(
     return make_cache_entry(parse_result, media_list)
 
 
-async def send_cached(msg: Message, entry: CacheEntry, url: str, *, user_config: SettingsConfig) -> None:
+async def send_cached(msg: Message, entry: CacheEntry, url: str, *, config: SettingsConfig) -> None:
     """从 file_id 缓存直接发送，跳过解析/下载/转码。"""
     logger.debug(f"缓存发送: media={entry.media}")
     caption = build_caption_by_str(
@@ -212,7 +213,7 @@ async def send_cached(msg: Message, entry: CacheEntry, url: str, *, user_config:
         entry.parse_result.content,
         url,
         entry.telegraph_url,
-        hide_source=user_config.hide_source,
+        hide_source=config.hide_source,
     )
 
     if entry.telegraph_url:
@@ -230,9 +231,9 @@ async def send_cached(msg: Message, entry: CacheEntry, url: str, *, user_config:
         return
 
     if len(entry.media) == 1:
-        await send_cached_single(msg, entry.media[0], caption)
+        await send_cached_single(msg, entry.media[0], caption, video_cover=config.video_cover)
     else:
-        await send_cached_multi(msg, entry.media, caption)
+        await send_cached_multi(msg, entry.media, caption, video_cover=config.video_cover)
 
 
 def media_input(media: str | BinaryIO | None) -> str | BinaryIO:
@@ -240,8 +241,7 @@ def media_input(media: str | BinaryIO | None) -> str | BinaryIO:
 
 
 def build_input_media(
-    media_refs: Sequence[AnyMediaRef],
-    processed_list: list[ProcessedMedia],
+    media_refs: Sequence[AnyMediaRef], processed_list: list[ProcessedMedia], *, video_cover: bool
 ) -> tuple[list[InputMediaPhoto | InputMediaVideo], list[InputMediaAnimation]]:
     """根据处理结果和媒体引用构建 Telegram InputMedia 列表。"""
     photos_videos: list[InputMediaPhoto | InputMediaVideo] = []
@@ -262,7 +262,7 @@ def build_input_media(
                     photos_videos.append(
                         InputMediaVideo(
                             media=file_path_str,
-                            video_cover=media_ref.thumb_url,
+                            video_cover=media_ref.thumb_url if video_cover else None,
                             duration=duration,
                             width=width,
                             height=height,
@@ -273,7 +273,7 @@ def build_input_media(
                     photos_videos.append(
                         InputMediaVideo(
                             media=processed.source.video_path,
-                            video_cover=file_path_str,
+                            video_cover=file_path_str if video_cover else None,
                             duration=duration,
                             width=width,
                             height=height,
@@ -428,7 +428,7 @@ async def send_multi(
     return None if not_cache else media_list
 
 
-async def send_cached_single(msg: Message, m: CacheMedia, caption: str) -> None:
+async def send_cached_single(msg: Message, m: CacheMedia, caption: str, *, video_cover: bool) -> None:
     """从缓存发送单个媒体。"""
     match m.type:
         case CacheMediaType.PHOTO:
@@ -441,7 +441,7 @@ async def send_cached_single(msg: Message, m: CacheMedia, caption: str) -> None:
                     m.file_id,
                     caption=caption,
                     supports_streaming=True,
-                    video_cover=m.cover_file_id,
+                    video_cover=m.cover_file_id if video_cover else None,
                 )
             )
         case CacheMediaType.ANIMATION:
@@ -452,7 +452,7 @@ async def send_cached_single(msg: Message, m: CacheMedia, caption: str) -> None:
             await send_with_rate_limit(lambda: msg.reply_document(m.file_id, caption=caption, force_document=True))
 
 
-async def send_cached_multi(msg: Message, media: list[CacheMedia], caption: str) -> None:
+async def send_cached_multi(msg: Message, media: list[CacheMedia], caption: str, *, video_cover: bool) -> None:
     """从缓存发送多个媒体。"""
     animations = [m for m in media if m.type == CacheMediaType.ANIMATION]
     others = [m for m in media if m.type != CacheMediaType.ANIMATION]
@@ -466,7 +466,7 @@ async def send_cached_multi(msg: Message, media: list[CacheMedia], caption: str)
             )
         )
 
-    media_group = build_cached_media_group(others)
+    media_group = build_cached_media_group(others, video_cover=video_cover)
     for batch in batched(media_group, 10):
         if batch[-1] == media_group[-1]:
             batch[0].caption = caption
