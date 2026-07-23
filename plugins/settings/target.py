@@ -114,11 +114,11 @@ def restore_cfg_target(cq: CallbackQuery, data: CfgCQData) -> AnySettingsTarget 
         return None
     match data.scope:
         case CfgScopeCode.USER:
-            return UserSettingsTarget(telegram_user_id=cq.from_user.id)
+            return UserSettingsTarget(telegram_user_id=data.user_id or cq.from_user.id)
         case CfgScopeCode.GROUP:
             return GroupSettingsTarget(telegram_chat_id=chat_id)
         case CfgScopeCode.GROUP_MEMBER:
-            return GroupMemberSettingsTarget(telegram_chat_id=chat_id, telegram_user_id=cq.from_user.id)
+            return GroupMemberSettingsTarget(telegram_chat_id=chat_id, telegram_user_id=data.user_id or cq.from_user.id)
         case CfgScopeCode.FORUM_TOPIC:
             thread_id = get_thread_id(cq.message)
             if not thread_id:
@@ -131,7 +131,7 @@ def restore_cfg_target(cq: CallbackQuery, data: CfgCQData) -> AnySettingsTarget 
             return ForumTopicMemberSettingsTarget(
                 telegram_chat_id=chat_id,
                 telegram_thread_id=thread_id,
-                telegram_user_id=cq.from_user.id,
+                telegram_user_id=data.user_id or cq.from_user.id,
             )
         case CfgScopeCode.CHANNEL:
             if data.channel_id is None:
@@ -162,6 +162,9 @@ def cfg_callback_data(action: CfgAction, value: str, target: AnySettingsTarget |
         value=value,
         scope=scope,
         channel_id=target.telegram_chat_id if isinstance(target, ChannelSettingsTarget) else None,
+        user_id=target.telegram_user_id
+        if isinstance(target, UserSettingsTarget | GroupMemberSettingsTarget | ForumTopicMemberSettingsTarget)
+        else None,
     ).unparse()
 
 
@@ -188,10 +191,19 @@ async def ensure_cfg_permission(
     cli: Client, cq: CallbackQuery, _t: PreLocaleSelector, target: AnySettingsTarget
 ) -> bool:
     match target:
-        case UserSettingsTarget():
-            return True
-        case GroupMemberSettingsTarget() | ForumTopicMemberSettingsTarget():
-            return True
+        case UserSettingsTarget(telegram_user_id=user_id):
+            if user_id == cq.from_user.id:
+                return True
+            await cq.answer(_t("这不是你的配置"), show_alert=True)
+            return False
+        case (
+            GroupMemberSettingsTarget(telegram_user_id=user_id)
+            | ForumTopicMemberSettingsTarget(telegram_user_id=user_id)
+        ):
+            if user_id == cq.from_user.id:
+                return True
+            await cq.answer(_t("这不是你的配置"), show_alert=True)
+            return False
         case GroupSettingsTarget(telegram_chat_id=chat_id) | ForumTopicSettingsTarget(telegram_chat_id=chat_id):
             if await is_chat_admin(cli, chat_id, cq.from_user.id):
                 return True

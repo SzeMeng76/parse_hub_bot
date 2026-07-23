@@ -40,21 +40,26 @@ class CfgCQData:
     value: str
     scope: CfgScopeCode | None = None
     channel_id: int | None = None
+    user_id: int | None = None
 
     @classmethod
     def parse(cls, data: str | bytes) -> Self:
         parts = str(data).split("|")
         _, action, value, *rest = parts
         scope = CfgScopeCode(rest[0]) if rest else None
-        channel_id = int(rest[1]) if len(rest) > 1 else None
-        return cls(action=CfgAction(action), value=value, scope=scope, channel_id=channel_id)
+        channel_id = int(rest[1]) if len(rest) > 1 and rest[1] else None
+        user_id = int(rest[2]) if len(rest) > 2 and rest[2] else None
+        return cls(action=CfgAction(action), value=value, scope=scope, channel_id=channel_id, user_id=user_id)
 
     def unparse(self) -> str:
         parts = ["cfg", self.action.value, self.value]
-        if self.scope:
-            parts.append(self.scope.value)
-        if self.channel_id:
-            parts.append(str(self.channel_id))
+        if not self.scope:
+            return "|".join(parts)
+        parts.append(self.scope.value)
+        if self.channel_id is not None or self.user_id is not None:
+            parts.append(str(self.channel_id) if self.channel_id is not None else "")
+        if self.user_id is not None:
+            parts.append(str(self.user_id))
         return "|".join(parts)
 
 
