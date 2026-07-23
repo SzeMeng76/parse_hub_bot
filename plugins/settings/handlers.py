@@ -100,6 +100,8 @@ async def cfg_callback(cli: Client, cq: CallbackQuery) -> None:
                 selected = ParseMode(data.value)
                 if not await ensure_cfg_field(cq, _t, target, "default_mode"):
                     return
+                if (await settings.get_config(target)).default_mode == selected:
+                    return
                 await settings.patch_config(target, default_mode=selected)
             case CfgAction.TOGGLE_BOOL:
                 switch = BOOL_SWITCH_MAP.get(data.value)

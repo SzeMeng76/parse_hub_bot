@@ -76,6 +76,7 @@ class Bot(Client):
                 language_code=iso639,
             )
             logger.debug(f"{iso639 or '默认'} 菜单已设置: {tc}")
+            await asyncio.sleep(0.5)
 
 
 if __name__ == "__main__":
