@@ -37,10 +37,11 @@ async def selected_lang(_: Client, cq: CallbackQuery) -> None:
         return
 
     _key, uid, selected = str(cq.data).split("|", 2)
-    if cq.from_user.id != uid:
+    if cq.from_user.id != int(uid):
         async with get_session() as session:
             lang = await UserService(session).get_lang(cq.from_user.id)
         await cq.answer(t_[lang]("这不是你的操作"), show_alert=True)
+        return
 
     async with get_session() as session:
         user = await UserService(session).set_lang(cq.from_user.id, selected)
