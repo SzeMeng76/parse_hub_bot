@@ -228,20 +228,24 @@ async def resolve_channel_target(
     try:
         channel = parse_channel_ref(channel_ref)
     except Exception:
-        await msg.reply(_t("链接格式无效"))
+        await msg.reply(format_label(_t("链接格式无效")))
         return None
     try:
         chat = await cli.get_chat(channel)
     except Exception:
-        await msg.reply(_t("Bot 未加入该频道, 请先将 Bot 加入频道后再配置"))
+        await msg.reply(format_label(_t("Bot 未加入该频道, 请先将 Bot 加入频道后再配置")))
+        return None
+
+    if chat.type != ChatType.CHANNEL:
+        await msg.reply(format_label(_t("非频道")))
         return None
 
     if chat.id is None:
-        await msg.reply(_t("Bot 未加入该频道, 请先将 Bot 加入频道后再配置"))
+        await msg.reply(format_label(_t("Bot 未加入该频道, 请先将 Bot 加入频道后再配置")))
         return None
 
     if not await is_chat_owner(cli, chat.id, msg.from_user.id):
-        await msg.reply(_t("你不是该频道的拥有者, 无权修改频道配置"))
+        await msg.reply(format_label(_t("你不是该频道的拥有者, 无权修改频道配置")))
         return None
 
     return ChannelSettingsTarget(telegram_chat_id=chat.id)
